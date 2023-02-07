@@ -74,6 +74,7 @@ def handle_proceed(volume_level):
             generated.export(new_file_name, format='mp3')
             generated_list.append(new_file_name)
     print(generated_list)
+    remove_old_files()
     response={}
     response['status'] = 'success'
     return HttpResponse(json.dumps(response),content_type="application/json")
@@ -84,3 +85,15 @@ def download_result(request):
         fh = open(file_path, 'rb')
         return FileResponse(fh, as_attachment=True)
     raise Http404
+
+def remove_old_files():
+    voice_list =os.listdir(VOICE_UPLOAD_DIRECTORY)
+    background_list = os.listdir(BACKGROUND_UPLOAD_DIRECTORY)
+    for voice_track in voice_list:
+        voice_file_path = os.path.join(VOICE_UPLOAD_DIRECTORY, voice_track)
+        os.remove(voice_file_path)
+
+    for background_track in background_list:
+        background_file_path = os.path.join(BACKGROUND_UPLOAD_DIRECTORY, background_track)
+        os.remove(background_file_path)
+
