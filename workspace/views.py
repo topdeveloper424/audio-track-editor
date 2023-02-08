@@ -5,9 +5,10 @@ import json, os
 from datetime import datetime
 from pydub import AudioSegment
 
-VOICE_UPLOAD_DIRECTORY = "uploads/voices"
-BACKGROUND_UPLOAD_DIRECTORY = "uploads/backgrounds"
-RESULT_UPLOAD_DIRECTORY = "uploads/results"
+cwd = os.getcwd()
+VOICE_UPLOAD_DIRECTORY = os.path.join(cwd, "uploads/voices")
+BACKGROUND_UPLOAD_DIRECTORY = os.path.join(cwd, "uploads/backgrounds")
+RESULT_UPLOAD_DIRECTORY = os.path.join(cwd, "uploads/results")
 
 # Create your views here.
 def home(request):
