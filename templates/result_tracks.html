@@ -8,27 +8,23 @@
             </div>
         </div>
         <div class="row mt-3">
-            <div class="col-md-6">
-                <div class="px-3" id="voiceSelectContainer">
-                    <p>Filter By Voice Track</p>
-                    <select class="form-control" id="voiceSelect">
-                        <option value="">ALL</option>
-                        {% for voice in voices %}
-                        <option value="{{voice.id}}" {% if request.GET.voice_id|to_int  == voice.id %} selected {% endif %}>{{voice.name}}</option>
-                        {% endfor %}
-                    </select>
-                </div>
+            <div class="col-md-6" id="voiceSelectContainer">
+                <p>Filter By Voice Track</p>
+                <select class="form-control" id="voiceSelect">
+                    <option value="">ALL</option>
+                    {% for voice in voices %}
+                    <option value="{{voice.id}}" {% if request.GET.voice_id|to_int  == voice.id %} selected {% endif %}>{{voice.name}}</option>
+                    {% endfor %}
+                </select>
             </div>
-            <div class="col-md-6">
-                <div class="px-3" id="backgroundSelectContainer">
-                    <p>Filter By Background Tracks</p>
-                    <select class="form-control" id="backgroundSelect">
-                        <option value="">ALL</option>
-                        {% for background in backgrounds %}
-                        <option value="{{background.id}}" {% if request.GET.background_id|to_int  == background.id %} selected {% endif %}>{{background.name}}</option>
-                        {% endfor %}
-                    </select>
-                </div>
+            <div class="col-md-6" id="backgroundSelectContainer">
+                <p>Filter By Background Tracks</p>
+                <select class="form-control" id="backgroundSelect">
+                    <option value="">ALL</option>
+                    {% for background in backgrounds %}
+                    <option value="{{background.id}}" {% if request.GET.background_id|to_int  == background.id %} selected {% endif %}>{{background.name}}</option>
+                    {% endfor %}
+                </select>
             </div>
         </div>
 

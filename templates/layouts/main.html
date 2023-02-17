@@ -57,6 +57,14 @@
             top: 20px!important;
             font-size: 40px!important;
         }
+        
+        .select2 {
+            width: 100%!important;
+        }
+        
+        .wrapper {
+            height: 98vh!important;
+        }
     </style>
 
 </head>
@@ -73,8 +81,8 @@
         <div data-active-color="white" data-background-color="man-of-steel" data-image="{% static 'img/sidebar-bg/01.jpg' %}" class="app-sidebar">
             <div class="sidebar-header">
                 <div class="logo clearfix">
-                    <a href="#" class="logo-text float-left">
-                        <div class="logo-img"><img src="{% static 'img/logo.png' %}" width="30" /></div><span class="text align-middle">Admin</span></a><a id="sidebarToggle" href="javascript:;" class="nav-toggle d-none d-sm-none d-md-none d-lg-block"><i data-toggle="expanded" class="toggle-icon ft-toggle-right"></i></a>
+                    <a href="{% url 'workspace:home' %}" class="logo-text float-left">
+                        <div class="logo-img"><img src="{% static 'img/logo.png' %}" width="30" /></div><span class="text align-middle">Editor</span></a><a id="sidebarToggle" href="javascript:;" class="nav-toggle d-none d-sm-none d-md-none d-lg-block"><i data-toggle="expanded" class="toggle-icon ft-toggle-right"></i></a>
                     <a id="sidebarClose" href="javascript:;" class="nav-close d-block d-md-block d-lg-none d-xl-none"><i class="ft-x"></i></a>
                 </div>
             </div>
@@ -109,8 +117,6 @@
                     <span class="d-lg-none navbar-right navbar-collapse-toggle"><a aria-controls="navbarSupportedContent" href="javascript:;" class="open-navbar-container black"><i class="ft-more-vertical"></i></a></span>
                     <form role="search" class="navbar-form navbar-right mt-1">
                         <div class="position-relative has-icon-right">
-                            <input type="text" placeholder="Search" class="form-control round" />
-                            <div class="form-control-position"><i class="ft-search"></i></div>
                         </div>
                     </form>
                 </div>
@@ -119,15 +125,15 @@
                         <ul class="navbar-nav">
                             <li class="dropdown nav-item">
                                 <a id="dropdownBasic3" href="#" data-toggle="dropdown" class="nav-link position-relative" style="display: inline-flex">
-                                    <p class="mt-2 mr-3"><b>Administrator</b></p>
+                                    <p class="mt-2 mr-3"><b>Abigail</b></p>
                                     <img class="media-object d-flex mr-3 round-media" src="{% static 'img/default-avatar.png' %}" alt="Generic placeholder image" style="width: 50px;height: 50px;border-radius: 50%;border: 3px solid #3eaef3;">
                                 </a>
-                                <div aria-labelledby="dropdownBasic3" class="dropdown-menu text-left dropdown-menu-right">
+                                <!-- <div aria-labelledby="dropdownBasic3" class="dropdown-menu text-left dropdown-menu-right">
                                     <div class="dropdown-divider"></div><a class="dropdown-item" onclick="event.preventDefault(); document.getElementById('logout-form').submit();"><i class="ft-power mr-2"></i><span>Logout</span></a>
                                     <form id="logout-form" action="#" method="POST" style="display: none;">
                                     </form>
 
-                                </div>
+                                </div> -->
                             </li>
                         </ul>
                     </div>
@@ -183,6 +189,7 @@
     <script>
         $('.alert-success').fadeIn().delay(5000).fadeOut();
         $('[data-toggle="tooltip"]').tooltip()
+        $.fn.modal.Constructor.prototype.enforceFocus = function() {};
     </script>
     <!-- END PAGE LEVEL JS-->
 </body>

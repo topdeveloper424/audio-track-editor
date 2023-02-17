@@ -17,13 +17,14 @@ RESULT_UPLOAD_DIRECTORY = "results/"
 def home(request):
     voice_tracks = VoiceTrack.objects.all()
     background_tracks = BackgroundTrack.objects.all()
-    result_tracks = ResultTrack.objects.all().order_by('created_at')[:10]
-    return render(request,'home.html', {'voices': voice_tracks, 'backgrounds':background_tracks, 'results': result_tracks})
+    result_tracks = ResultTrack.objects.all()
+    result_tracks_top10 = result_tracks.order_by('-created_at')[:10]
+    return render(request,'home.html', {'voices': voice_tracks, 'backgrounds':background_tracks, 'results': result_tracks_top10,'results_count': result_tracks.count()})
 
 def voice_tracks(request):
     default_page = 1
     page = request.GET.get('page', default_page)
-    voice_tracks = VoiceTrack.objects.all()
+    voice_tracks = VoiceTrack.objects.all().order_by('-created_at')
     items_per_page = 10
     paginator = Paginator(voice_tracks, items_per_page)
     items_page = []
@@ -83,7 +84,7 @@ def delete_voice(request):
 def background_tracks(request):
     default_page = 1
     page = request.GET.get('page', default_page)
-    background_tracks = BackgroundTrack.objects.all()
+    background_tracks = BackgroundTrack.objects.all().order_by('-created_at')
     items_per_page = 10
     paginator = Paginator(background_tracks, items_per_page)
     items_page = []
@@ -155,12 +156,12 @@ def result_tracks(request):
 
     result_tracks = None
     if voice_id == None and background_id == None:
-        result_tracks = ResultTrack.objects.all()
+        result_tracks = ResultTrack.objects.all().order_by('-created_at')
     else:
         if voice_id:
-            result_tracks = ResultTrack.objects.filter(voice_track__pk = voice_id)
+            result_tracks = ResultTrack.objects.filter(voice_track__pk = voice_id).order_by('-created_at')
         if background_id:
-            result_tracks = ResultTrack.objects.filter(background_track__pk = background_id)
+            result_tracks = ResultTrack.objects.filter(background_track__pk = background_id).order_by('-created_at')
 
     items_per_page = 10
     paginator = Paginator(result_tracks, items_per_page)
