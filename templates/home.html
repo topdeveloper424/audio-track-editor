@@ -15,58 +15,57 @@
 {% endblock %} {% load string_filters %} {% block content %}
 <div class="card">
     <div class="card-header">
-        <h4 class="card-title" id="basic-layout-round-controls"><img class="mr-3" src="{% static 'img/voice.png' %}" width="50px" />Track Combination Tool</h4>
-        <p class="mb-1 mt-3">Upload one main track file (.mp3) and multiple background track files(.mp3), then set volume level to increase</p>
+        <h4 class="card-title" id="basic-layout-round-controls"><img class="mr-3" src="{% static 'img/voice.png' %}" width="50px" />Track Combination </h4>
     </div>
-    <div class="card-content">
-        <div class="px-3">
+    <div class="card-content ">
+        <div class="card-body">
             <div class="row">
-                <div class="col-6">
-                    <div class="card">
-                        <div class="card-header">
-                            <h4 class="card-title">Voice Track Files Upload</h4>
-                        </div>
-                        <div class="card-content ">
-                            <div class="card-body">
-                                <form action="{% url 'workspace:upload_voice' %}" method="post" class="dropzone dropzone-area" id="voice-multiple-files" enctype="multipart/form-data">
-                                    <div class="dz-message">Drop Files Here To Upload</div>
-                                </form>
-                            </div>
-                        </div>
+                <div class="col-md-6">
+                    <div class="px-3" id="voiceSelectContainer">
+                        <p>Select Voice Track</p>
+                        <select class="form-control" id="voiceSelect">
+                            {% for voice in voices %}
+                            <option value="{{voice.id}}">{{voice.name}}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                </div>
+                <div class="col-md-6">
+                    <div class="px-3" id="backgroundSelectContainer">
+                        <p>Select Background Tracks</p>
+                        <select class="form-control" id="backgroundSelect" multiple="multiple">
+                            {% for background in backgrounds %}
+                            <option value="{{background.id}}">{{background.name}}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                </div>
+
+            </div>
+            <div class="row mb-2 mt-4">
+                <div class="col-md-3 text-center">
+                    <div class="px-3">
+                        <input type="number" class="form-control" step="0.1" id="volumeLevel" placeholder="Enter Db value">
                     </div>
                 </div>
-                <div class="col-6">
-                    <div class="card">
-                        <div class="card-header">
-                            <h4 class="card-title">Background Track Files Upload</h4>
-                        </div>
-                        <div class="card-content ">
-                            <div class="card-body">
-                                <form action="{% url 'workspace:upload_background' %}" method="post" class="dropzone dropzone-area" id="background-multiple-files" enctype="multipart/form-data">
-                                    <div class="dz-message">Drop Files Here To Upload</div>
-                                </form>
-                            </div>
+                <div class="col-md-6 text-left">
+                    <div class="px-3">
+                        <button type="button" class="btn btn-raised btn-primary" id="start_btn">
+                        <i class="fa fa-check-square-o"></i> Start
+                      </button> &nbsp;&nbsp;
+                        <div class="spinner-border" role="status" style="display: none;">
+                            <span class="sr-only">Please wait for while audio files are being generated...</span>
                         </div>
                     </div>
                 </div>
             </div>
-        </div>
-    </div>
-</div>
-<div class="row mb-2">
-    <div class="col-md-3 text-center">
-        <input type="number" class="form-control" step="0.1" id="volumeLevel" placeholder="Enter Db value">
-    </div>
-    <div class="col-md-6 text-left">
-        <button type="button" class="btn btn-raised btn-primary" id="start_btn">
-            <i class="fa fa-check-square-o"></i> Start
-          </button> &nbsp;&nbsp;
-        <div class="spinner-border" role="status" style="display: none;">
-            <span class="sr-only">Please wait for while audio files are being generated...</span>
-        </div>
-    </div>
 
+        </div>
+    </div>
 </div>
+
 <div class="row">
     <div class="col-sm-12 col-md-6 col-lg-4">
         <div class="card">
@@ -77,7 +76,7 @@
                 <div class="card-body">
                     <ul class="list-group">
                         {% for track in results %}
-                        <a href="{% url 'workspace:download_result' %}?filename={{track|urlencode}}" class="list-group-item">{{track}} <i class="ft-download-cloud ml-3"></i></a> {% endfor %}
+                        <a href="{{track.track_file.url}}" class="list-group-item" download>{{track.name}} <i class="ft-download-cloud ml-3"></i></a> {% endfor %}
                     </ul>
                 </div>
             </div>
@@ -85,71 +84,7 @@
     </div>
 
 </div>
-<!-- 
-<div class="row">
-    <div class="col-sm-12 col-md-6 col-lg-4">
-        <div class="card">
-            <div class="card-header">
-                <h4 class="card-title"><img class="mr-2" src="{% static 'img/voice.png' %}" width="50px" />Voices &nbsp;</h4>
 
-            </div>
-            <div class="card-content">
-                <div class="card-body">
-                    <ul class="list-group">
-                        {% for track in voices %}
-                        <li class="list-group-item">
-                            <div class="custom-checkbox custom-control-inline ml-3">
-                                <input type="checkbox" id="voiceCheckbox{{track}}" name="voiceCheckbox" class="custom-control-input">
-                                <label class="custom-control-label" for="voiceCheckbox{{track}}"><span class="badge badge-danger mr-2">{% get_actual_name track %}.mp3</span></label>
-                            </div>
-                        </li>
-                        {% endfor %}
-                    </ul>
-                </div>
-            </div>
-        </div>
-    </div>
-    <div class="col-sm-12 col-md-6 col-lg-4">
-        <div class="card">
-            <div class="card-header">
-                <h4 class="card-title"><img class="mr-2" src="{% static 'img/background.png' %}" width="50px">Backgrounds&nbsp;</h4>
-            </div>
-            <div class="card-content">
-                <div class="card-body">
-                    <ul class="list-group">
-                        {% for track in backgrounds %}
-                        <li class="list-group-item">
-                            <div class="custom-checkbox custom-control-inline ml-3">
-                                <input type="checkbox" id="backgroundCheckbox{{track}}" name="backgroundCheckbox" class="custom-control-input">
-                                <label class="custom-control-label" for="backgroundCheckbox{{track}}"><span class="badge badge-primary mr-2">{% get_actual_name track %}.mp3</span></label>
-                            </div>
-                        </li>
-                        {% endfor %}
-                    </ul>
-                </div>
-            </div>
-        </div>
-    </div>
-    <div class="col-sm-12 col-md-6 col-lg-4">
-        <div class="card">
-            <div class="card-header">
-                <h4 class="card-title"><img class="mr-2" src="{% static 'img/results.png' %}" width="50px">Results&nbsp;</h4>
-            </div>
-            <div class="card-content">
-                <div class="card-body">
-                    <ul class="list-group">
-                        {% for track in results %}
-                        <li class="list-group-item">
-                            <a href="{% url 'workspace:download_result' %}?filename={{track}}" class="list-group-item">{{track}}</a>
-                        </li>
-                        {% endfor %}
-                    </ul>
-                </div>
-            </div>
-        </div>
-    </div>
-
-</div> -->
 
 
 {% endblock %} {% block script%}
@@ -159,25 +94,12 @@
     Dropzone.autoDiscover = false;
 
     $(document).ready(function() {
-        $(".dropzone-area").dropzone({
-                paramName: "file", // The name that will be used to transfer the file
-                maxFilesize: 50, // MB
-                acceptedFiles: '.mp3',
-                addRemoveLinks: false,
-                timeout: 5000,
-                clickable: true,
-                success: function(file, response) {
-                    toastr.success("Successfully Uploaded!", "Server Status")
-                    console.log(response);
-                },
-                error: function(file, response) {
-                    toastr.error("Error Happened!", "Server Status")
-                    return false;
-                }
-
-            }
-
-        )
+        $('#backgroundSelect').select2({
+            dropdownParent: $('#backgroundSelectContainer'),
+        });
+        $('#voiceSelect').select2({
+            dropdownParent: $('#backgroundSelectContainer'),
+        });
 
         $("#start_btn").click(function() {
             let level = $("#volumeLevel").val();
@@ -185,13 +107,27 @@
                 toastr.error("Error Happened!", "Enter correct volume level!")
                 return false;
             }
+
+            let voiceTrack = $("#voiceSelect").val();
+            if (voiceTrack == "") {
+                toastr.error("Error Happened!", "Choose voice track!")
+                return false;
+            }
+            let backgroundTracks = $("#backgroundSelect").val();
+            if (backgroundTracks == "" || backgroundTracks.length == 0) {
+                toastr.error("Error Happened!", "Choose background tracks!")
+                return false;
+            }
+
             $(".spinner-border").show();
             $.ajax({
                 _token: '{% csrf_token %}',
                 type: "POST",
                 url: "{% url 'workspace:proceed' %}",
                 data: {
-                    level: level
+                    level: level,
+                    voice_track_id: voiceTrack,
+                    background_track_ids: backgroundTracks.toString()
                 },
                 dataType: 'json',
                 success: function(response) {

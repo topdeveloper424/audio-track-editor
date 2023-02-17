@@ -1,0 +1,245 @@
+{% extends 'layouts/main.html' %} {% load static %} {% block title %} audio tool {% endblock %} {% block style %}
+<link rel="stylesheet" type="text/css" href="{% static 'vendors/css/toastr.css' %}"> {% endblock %} {% load string_filters %} {% block content %}
+<div class="card">
+    <div class="card-header">
+        <div class="row">
+            <div class="col-md-12">
+                <h4 class="card-title">Result Tracks</h4>
+            </div>
+        </div>
+        <div class="row mt-3">
+            <div class="col-md-6">
+                <div class="px-3" id="voiceSelectContainer">
+                    <p>Filter By Voice Track</p>
+                    <select class="form-control" id="voiceSelect">
+                        <option value="">ALL</option>
+                        {% for voice in voices %}
+                        <option value="{{voice.id}}" {% if request.GET.voice_id|to_int  == voice.id %} selected {% endif %}>{{voice.name}}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="px-3" id="backgroundSelectContainer">
+                    <p>Filter By Background Tracks</p>
+                    <select class="form-control" id="backgroundSelect">
+                        <option value="">ALL</option>
+                        {% for background in backgrounds %}
+                        <option value="{{background.id}}" {% if request.GET.background_id|to_int  == background.id %} selected {% endif %}>{{background.name}}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+        </div>
+
+    </div>
+    <div class="card-content">
+        <div class="card-body table-responsive">
+            {% if results.has_other_pages %}
+            <div class="btn-group" role="group" aria-label="Item pagination">
+                {% if results.has_previous %}
+                <a href="?page={{ results.previous_page_number }}" class="btn btn-outline-primary">&laquo;</a> {% endif %} {% for page_number in results.paginator.page_range %} {% if results.number == page_number %}
+                <button class="btn btn-outline-primary active">
+                            <span>{{ page_number }} <span class="sr-only">(current)</span></span>
+                        </button> {% else %}
+                <a href="?page={{ page_number }}" class="btn btn-outline-primary">
+                            {{ page_number }}
+                        </a> {% endif %} {% endfor %} {% if results.has_next %}
+                <a href="?page={{ results.next_page_number }}" class="btn btn-outline-primary">&raquo;</a> {% endif %}
+            </div>
+            {% endif %}
+            <table class="table text-center">
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Created At</th>
+                        <th>Listening</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% if results %} {% for result in results %}
+                    <tr>
+                        <td>{{result.name}}</td>
+                        <td>{{result.created_at}}</td>
+                        <td>
+                            <audio controls preload="none">
+                                <source src="{{result.track_file.url}}" type="audio/mpeg">
+                                Your browser does not support the audio tag.
+                              </audio>
+                        </td>
+                        <td>
+                            <a class="success p-0 edit-btn" data-original-title="" title="edit track" data-id="{{result.id}}">
+                                <i class="ft-edit-2 font-medium-3 mr-2"></i>
+                            </a>
+                            <a class="danger p-0 delete-btn" data-original-title="" title="delete track" data-id="{{result.id}}">
+                                <i class="ft-x font-medium-3 mr-2"></i>
+                            </a>
+                        </td>
+                    </tr>
+                    {% endfor %} {% endif %}
+
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+
+<div class="modal fade text-left" id="trackModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel8" aria-hidden="true">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header bg-primary white">
+                <h4 class="modal-title" id="myModalLabel8">Edit Track</h4>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                          </button>
+            </div>
+            <form class="form" action="{% url 'workspace:result_track' %}" method="POST">
+                {% csrf_token %}
+                <div class="modal-body">
+                    <input type="hidden" id="trackId" name="track_id">
+                    <div class="row mt-2">
+                        <div class="col-xl-12">
+                            <fieldset class="form-group">
+                                <label for="trackName">Name</label>
+                                <input class="form-control" type="text" id="trackName" name="track_name" placeholder="Enter Track Name" required>
+                            </fieldset>
+                        </div>
+                        <div class="col-xl-6">
+                            <fieldset class="form-group">
+                                <label for="trackName">Voice Track</label>
+                                <input class="form-control" type="text" id="voiceTrackName" readonly>
+                            </fieldset>
+                        </div>
+                        <div class="col-xl-6">
+                            <fieldset class="form-group" id="voiceTrack">
+                                <br>
+                            </fieldset>
+                        </div>
+                        <div class="col-xl-6">
+                            <fieldset class="form-group">
+                                <label for="trackName">Background Track</label>
+                                <input class="form-control" type="text" id="backgroundTrackName" readonly>
+                            </fieldset>
+                        </div>
+                        <div class="col-xl-6">
+                            <fieldset class="form-group" id="backgroundTrack">
+                                <br>
+                            </fieldset>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn grey btn-outline-secondary" data-dismiss="modal">Close</button>
+                    <button type="submit" class="btn btn-outline-primary">Save changes</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+{% endblock %} {% block script%}
+<script src="{% static 'vendors/js/toastr.min.js' %}" type="text/javascript"></script>
+<script>
+    $(document).ready(function() {
+        $('#backgroundSelect').select2({
+            dropdownParent: $('#backgroundSelectContainer'),
+        });
+        $('#voiceSelect').select2({
+            dropdownParent: $('#backgroundSelectContainer'),
+        });
+
+        function loadPage() {
+            let url = "{% url 'workspace:result_tracks' %}";
+            let voice_track_id = $("#voiceSelect").val();
+            let background_track_id = $("#backgroundSelect").val();
+            let params = "";
+            if (voice_track_id != "") {
+                params += "?voice_id=" + voice_track_id;
+            }
+            if (background_track_id != "") {
+                if (params != "") {
+                    params += "&";
+                } else {
+                    params += "?";
+                }
+                params += "background_id=" + background_track_id;
+            }
+            url += params;
+            location.href = url;
+        }
+        $('#voiceSelect').on("change", function() {
+            loadPage();
+        });
+        $('#backgroundSelect').on("change", function() {
+            loadPage();
+        });
+        $('.edit-btn').on("click", function() {
+            let track_id = $(this).attr("data-id");
+            $.ajax({
+                type: "GET",
+                url: "{% url 'workspace:result_track' %}",
+                data: {
+                    track_id: track_id
+                },
+                dataType: 'json',
+                success: function(response) {
+                    console.log(response)
+                    $("#voiceTrack").html("");
+                    $("#backgroundTrack").html("");
+                    let resultTrack = response["result"];
+                    let voiceTrack = response["voice"];
+                    let backgroundTrack = response["background"];
+                    $("#trackId").val(resultTrack.pk);
+                    $("#trackName").val(resultTrack.name);
+                    $("#voiceTrackName").val(voiceTrack.name);
+                    var voiceAudio = $('<audio controls preload="none"></audio>');
+                    voiceAudio.append('<source src="' + voiceTrack.url + '" type="audio/mpeg" />');
+                    voiceAudio.appendTo('#voiceTrack');
+
+                    $("#backgroundTrackName").val(backgroundTrack.name);
+                    var backgroundAudio = $('<audio controls preload="none"></audio>');
+                    backgroundAudio.append('<source src="' + backgroundTrack.url + '" type="audio/mpeg" />');
+                    backgroundAudio.appendTo('#backgroundTrack');
+
+                    $("#trackModal").modal('show');
+                }
+            });
+
+        });
+
+        $('.delete-btn').on("click", function() {
+
+            let track_id = $(this).attr("data-id");
+            swal({
+                title: 'Are you sure to delete this track?',
+                text: "You won't be able to revert this!",
+                type: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#0CC27E',
+                cancelButtonColor: '#FF586B',
+                confirmButtonText: 'OK',
+                cancelButtonText: "Cancel"
+            }).then(function(isConfirm) {
+                if (isConfirm) {
+                    $.ajax({
+                        _token: '{% csrf_token %}',
+                        type: "POST",
+                        url: "{% url 'workspace:delete_result' %}",
+                        data: {
+                            track_id: track_id
+                        },
+                        dataType: 'json',
+                        success: function(response) {
+                            location.reload();
+                        }
+                    });
+
+                }
+            }).catch(swal.noop);
+        });
+
+    });
+</script>
+{% endblock %}

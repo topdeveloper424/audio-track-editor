@@ -1,0 +1,206 @@
+{% extends 'layouts/main.html' %} {% load static %} {% block title %} audio tool {% endblock %} {% block style %}
+<link rel="stylesheet" type="text/css" href="{% static 'vendors/css/dropzone.min.css' %}">
+<link rel="stylesheet" type="text/css" href="{% static 'vendors/css/toastr.css' %}"> {% endblock %} {% load string_filters %} {% block content %}
+<div class="card">
+    <div class="card-header">
+        <div class="row">
+            <div class="col-md-6">
+                <h4 class="card-title">Voice Tracks</h4>
+            </div>
+            <div class="col-md-6">
+                <div class="row mt-2">
+                    <div class="col-md-6">
+                        <fieldset class="form-group">
+                            <label for="newTrackName">Name</label>
+                            <input class="form-control" type="text" id="newTrackName" name="trackName" placeholder="Enter Track Name" required>
+                        </fieldset>
+                    </div>
+                    <div class="col-md-6">
+                        <form action="{% url 'workspace:upload_voice' %}" method="post" class="dropzone dropzone-area" id="background-multiple-files" enctype="multipart/form-data">
+                            <div class="dz-message">Drop Files Here To Upload</div>
+                        </form>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+    <div class="card-content">
+        <div class="card-body table-responsive">
+            {% if voices.has_other_pages %}
+            <div class="btn-group" role="group" aria-label="Item pagination">
+                {% if voices.has_previous %}
+                <a href="?page={{ voices.previous_page_number }}" class="btn btn-outline-primary">&laquo;</a> {% endif %} {% for page_number in voices.paginator.page_range %} {% if voices.number == page_number %}
+                <button class="btn btn-outline-primary active">
+                            <span>{{ page_number }} <span class="sr-only">(current)</span></span>
+                        </button> {% else %}
+                <a href="?page={{ page_number }}" class="btn btn-outline-primary">
+                            {{ page_number }}
+                        </a> {% endif %} {% endfor %} {% if voices.has_next %}
+                <a href="?page={{ voices.next_page_number }}" class="btn btn-outline-primary">&raquo;</a> {% endif %}
+            </div>
+            {% endif %}
+            <table class="table text-center">
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Created At</th>
+                        <th>Listening</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for voice in voices %}
+                    <tr>
+                        <td>{{voice.name}}</td>
+                        <td>{{voice.created_at}}</td>
+                        <td>
+                            <audio controls preload="none">
+                                <source src="{{voice.track_file.url}}" type="audio/mpeg">
+                                Your browser does not support the audio tag.
+                              </audio>
+                        </td>
+                        <td>
+                            <a class="success p-0 edit-btn" data-original-title="" title="edit track" data-id="{{voice.id}}">
+                                <i class="ft-edit-2 font-medium-3 mr-2"></i>
+                            </a>
+                            <a class="danger p-0 delete-btn" data-original-title="" title="delete track" data-id="{{voice.id}}">
+                                <i class="ft-x font-medium-3 mr-2"></i>
+                            </a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+
+<div class="modal fade text-left" id="trackModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel8" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header bg-primary white">
+                <h4 class="modal-title" id="myModalLabel8">Edit Track</h4>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                          </button>
+            </div>
+            <form class="form" action="{% url 'workspace:voice_track' %}" method="POST">
+                {% csrf_token %}
+                <div class="modal-body">
+                    <input type="hidden" id="trackId" name="track_id">
+                    <div class="row mt-2">
+                        <div class="col-xl-12">
+                            <fieldset class="form-group">
+                                <label for="trackName">Name</label>
+                                <input class="form-control" type="text" id="trackName" name="track_name" placeholder="Enter Track Name" required>
+                            </fieldset>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn grey btn-outline-secondary" data-dismiss="modal">Close</button>
+                    <button type="submit" class="btn btn-outline-primary">Save changes</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+{% endblock %} {% block script%}
+<script src="{% static 'vendors/js/dropzone.min.js' %}" type="text/javascript"></script>
+<script src="{% static 'vendors/js/toastr.min.js' %}" type="text/javascript"></script>
+<script>
+    Dropzone.autoDiscover = false;
+
+    $(document).ready(function() {
+        $('.edit-btn').on("click", function() {
+            let track_id = $(this).attr("data-id");
+            $.ajax({
+                type: "GET",
+                url: "{% url 'workspace:voice_track' %}",
+                data: {
+                    track_id: track_id
+                },
+                dataType: 'json',
+                success: function(response) {
+                    let trackObj = response[0];
+                    $("#trackId").val(trackObj.pk);
+                    $("#trackName").val(trackObj.fields.name);
+                    $("#trackModal").modal('show');
+                }
+            });
+
+        });
+
+        $('.delete-btn').on("click", function() {
+
+            let track_id = $(this).attr("data-id");
+            swal({
+                title: 'Are you sure to delete this track?',
+                text: "You won't be able to revert this!",
+                type: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#0CC27E',
+                cancelButtonColor: '#FF586B',
+                confirmButtonText: 'OK',
+                cancelButtonText: "Cancel"
+            }).then(function(isConfirm) {
+                if (isConfirm) {
+                    $.ajax({
+                        _token: '{% csrf_token %}',
+                        type: "POST",
+                        url: "{% url 'workspace:delete_voice' %}",
+                        data: {
+                            track_id: track_id
+                        },
+                        dataType: 'json',
+                        success: function(response) {
+                            location.reload();
+                        }
+                    });
+
+                }
+            }).catch(swal.noop);
+        });
+
+        $(".dropzone-area").dropzone({
+                paramName: "file", // The name that will be used to transfer the file
+                maxFilesize: 50, // MB
+                acceptedFiles: '.mp3',
+                addRemoveLinks: false,
+                timeout: 5000,
+                maxFiles: 1,
+                clickable: true,
+                init: function() {
+                    var that = this;
+                    this.on("sending", function(file, xhr, formData) {
+                        let trackName = $("#newTrackName").val();
+                        formData.append("trackName", trackName);
+                    });
+                    this.on("addedfile", file => {
+                        let trackName = $("#newTrackName").val();
+                        if (trackName.trim() == "") {
+                            toastr.error("Enter Correct Track Name!", "Error")
+                            that.removeFile(file);
+                        }
+                    });
+                },
+                success: function(file, response) {
+                    toastr.success("Successfully Uploaded!", "Server Status")
+                    console.log(response);
+                    location.reload();
+                },
+                error: function(file, response) {
+                    toastr.error("Error Happened!", "Server Status")
+                    return false;
+                }
+
+            }
+
+        )
+    });
+</script>
+{% endblock %}
