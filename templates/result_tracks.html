@@ -96,10 +96,16 @@
                 <div class="modal-body">
                     <input type="hidden" id="trackId" name="track_id">
                     <div class="row mt-2">
-                        <div class="col-xl-12">
+                        <div class="col-xl-6">
                             <fieldset class="form-group">
                                 <label for="trackName">Name</label>
                                 <input class="form-control" type="text" id="trackName" name="track_name" placeholder="Enter Track Name" required>
+                            </fieldset>
+                        </div>
+                        <div class="col-xl-6">
+                            <fieldset class="form-group">
+                                <label for="dbLevel">Db Level</label>
+                                <input class="form-control" type="text" id="dbLevel" readonly>
                             </fieldset>
                         </div>
                         <div class="col-xl-6">
@@ -189,6 +195,7 @@
                     let backgroundTrack = response["background"];
                     $("#trackId").val(resultTrack.pk);
                     $("#trackName").val(resultTrack.name);
+                    $("#dbLevel").val(resultTrack.db_level);
                     $("#voiceTrackName").val(voiceTrack.name);
                     var voiceAudio = $('<audio controls preload="none"></audio>');
                     voiceAudio.append('<source src="' + voiceTrack.url + '" type="audio/mpeg" />');

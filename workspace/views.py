@@ -186,10 +186,11 @@ def result_track(request):
         background_track = {}
         background_track["name"] = result_track.background_track.name
         background_track["url"] = result_track.background_track.track_file.url
-        print(result_track.name)
+
         result_json = {}
         result_json["name"] = result_track.name
         result_json["pk"] = result_track.pk
+        result_json["db_level"] = result_track.db_level
         response = {}
         response["result"] = result_json
         response["voice"] = voice_track
@@ -243,16 +244,17 @@ def handle_proceed(volume_level, voice_track_id, background_track_ids):
         background_track = BackgroundTrack.objects.get(pk=background_track_id)
         background = AudioSegment.from_mp3(background_track.track_file.path)
         generated = background.overlay(louder_song)
-        result_filename = voice_track.name + "_" + background_track.name
+        result_filename = voice_track.name + "_" + background_track.name +"_"+ str(volume_level)
         result_filename = text.slugify(result_filename)
         result_file_path = os.path.join(settings.MEDIA_ROOT, RESULT_UPLOAD_DIRECTORY + result_filename + ".mp3")
         generated.export(result_file_path, format='mp3')
 
         result_track = ResultTrack()
+        result_track.db_level = int(volume_level)
         result_track.voice_track = voice_track
         result_track.background_track = background_track
         result_track.name = result_filename
-        result_track.track_file = result_file_path
+        result_track.track_file = RESULT_UPLOAD_DIRECTORY + result_filename + ".mp3"
         result_track.save()
         result_track_list.append(result_track)
 
