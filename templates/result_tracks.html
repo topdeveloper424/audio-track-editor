@@ -22,7 +22,7 @@
                 <select class="form-control" id="backgroundSelect">
                     <option value="">ALL</option>
                     {% for background in backgrounds %}
-                    <option value="{{background.id}}" {% if request.GET.background_id|to_int  == background.id %} selected {% endif %}>{{background.name}}</option>
+                    <option value="{{background.id}}" {% if request.GET.background_id|to_int  == background.id %} selected {% endif %}>{{background.name}} [{{background.db_level}}]</option>
                     {% endfor %}
                 </select>
             </div>
@@ -195,13 +195,13 @@
                     let backgroundTrack = response["background"];
                     $("#trackId").val(resultTrack.pk);
                     $("#trackName").val(resultTrack.name);
-                    $("#dbLevel").val(resultTrack.db_level);
                     $("#voiceTrackName").val(voiceTrack.name);
                     var voiceAudio = $('<audio controls preload="none"></audio>');
                     voiceAudio.append('<source src="' + voiceTrack.url + '" type="audio/mpeg" />');
                     voiceAudio.appendTo('#voiceTrack');
 
                     $("#backgroundTrackName").val(backgroundTrack.name);
+                    $("#dbLevel").val(backgroundTrack.db_level);
                     var backgroundAudio = $('<audio controls preload="none"></audio>');
                     backgroundAudio.append('<source src="' + backgroundTrack.url + '" type="audio/mpeg" />');
                     backgroundAudio.appendTo('#backgroundTrack');

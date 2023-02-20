@@ -9,14 +9,21 @@
             </div>
             <div class="col-md-6">
                 <div class="row mt-2">
-                    <div class="col-md-6">
+                    <div class="col-md-4">
                         <fieldset class="form-group">
                             <label for="newTrackName">Name</label>
                             <input class="form-control" type="text" id="newTrackName" name="trackName" placeholder="Enter Track Name" required>
                             <p class="text-danger font-small-3">Enter track name before upload file.</p>
                         </fieldset>
                     </div>
-                    <div class="col-md-6">
+                    <div class="col-md-3">
+                        <fieldset class="form-group">
+                            <label for="newTrackName">Db Level</label>
+                            <input class="form-control" type="number" id="newDbLevel" name="dbLevel" placeholder="Enter Db Level" required>
+                            <p class="text-danger font-small-3">Enter Db Level before upload file.</p>
+                        </fieldset>
+                    </div>
+                    <div class="col-md-5">
                         <form action="{% url 'workspace:upload_background' %}" method="post" class="dropzone dropzone-area" id="background-multiple-files" enctype="multipart/form-data">
                             <div class="dz-message">Drop Files Here To Upload</div>
                         </form>
@@ -45,6 +52,7 @@
                 <thead>
                     <tr>
                         <th>Name</th>
+                        <th>Db Level</th>
                         <th>Created At</th>
                         <th>Listening</th>
                         <th>Actions</th>
@@ -54,6 +62,7 @@
                     {% for background in backgrounds %}
                     <tr>
                         <td>{{background.name}}</td>
+                        <td>{{background.db_level}}</td>
                         <td>{{background.created_at}}</td>
                         <td>
                             <audio controls preload="none">
@@ -93,10 +102,16 @@
                 <div class="modal-body">
                     <input type="hidden" id="trackId" name="track_id">
                     <div class="row mt-2">
-                        <div class="col-xl-12">
+                        <div class="col-xl-6">
                             <fieldset class="form-group">
                                 <label for="trackName">Name</label>
                                 <input class="form-control" type="text" id="trackName" name="track_name" placeholder="Enter Track Name" required>
+                            </fieldset>
+                        </div>
+                        <div class="col-xl-6">
+                            <fieldset class="form-group">
+                                <label for="trackName">Db Level</label>
+                                <input class="form-control" type="number" id="dbLevel" name="db_level" placeholder="Enter Db Value" required>
                             </fieldset>
                         </div>
                     </div>
@@ -130,6 +145,7 @@
                     let trackObj = response[0];
                     $("#trackId").val(trackObj.pk);
                     $("#trackName").val(trackObj.fields.name);
+                    $("#dbLevel").val(trackObj.fields.db_level);
                     $("#trackModal").modal('show');
                 }
             });
@@ -179,12 +195,19 @@
                     var that = this;
                     this.on("sending", function(file, xhr, formData) {
                         let trackName = $("#newTrackName").val();
+                        let dbLevel = $("#newDbLevel").val();
                         formData.append("trackName", trackName);
+                        formData.append("dbLevel", dbLevel);
                     });
                     this.on("addedfile", file => {
                         let trackName = $("#newTrackName").val();
                         if (trackName.trim() == "") {
                             toastr.error("Enter Correct Track Name!", "Error")
+                            that.removeFile(file);
+                        }
+                        let dbLevel = $("#newDbLevel").val();
+                        if (dbLevel.trim() == "") {
+                            toastr.error("Enter Correct Db Level!", "Error")
                             that.removeFile(file);
                         }
                     });

@@ -101,7 +101,9 @@ def background_tracks(request):
 def upload_background(request):
     if request.method == 'POST':
         track_name = request.POST.get("trackName")
+        db_level = request.POST.get("dbLevel")
         background_track = BackgroundTrack()
+        background_track.db_level = db_level
         background_track.name = track_name
         background_track.track_file.save(track_name+".mp3", request.FILES['file'], save=True)
         background_track.save()
@@ -119,7 +121,9 @@ def background_track(request):
     elif request.method == 'POST':
         track_id = request.POST.get("track_id")
         track_name = request.POST.get("track_name")
+        db_level = request.POST.get("db_level")
         background_track = BackgroundTrack.objects.get(pk=track_id)
+        background_track.db_level = int(db_level)
         if track_name != background_track.name:
             track_file = background_track.track_file
             new_filename = text.slugify(track_name) + pathlib.Path(track_file.name).suffix
@@ -127,7 +131,7 @@ def background_track(request):
             os.rename(track_file.path, new_file_path)        
             background_track.track_file = new_file_path
             background_track.name = track_name
-            background_track.save()
+        background_track.save()
         return redirect('workspace:background_tracks')
 
 @csrf_exempt    
@@ -186,11 +190,11 @@ def result_track(request):
         background_track = {}
         background_track["name"] = result_track.background_track.name
         background_track["url"] = result_track.background_track.track_file.url
+        background_track["db_level"] = result_track.background_track.db_level
 
         result_json = {}
         result_json["name"] = result_track.name
         result_json["pk"] = result_track.pk
-        result_json["db_level"] = result_track.db_level
         response = {}
         response["result"] = result_json
         response["voice"] = voice_track
@@ -225,35 +229,34 @@ def delete_result(request):
 @csrf_exempt    
 def proceed(request):
     if request.method == 'POST':
-        volume_level = request.POST['level']
         voice_track_id = request.POST['voice_track_id']
         background_track_ids_str = request.POST['background_track_ids']
         background_track_ids = background_track_ids_str.split(",")
-        handle_proceed(volume_level, voice_track_id, background_track_ids)
+        handle_proceed(voice_track_id, background_track_ids)
     response={}
     response['status'] = 'success'
     return HttpResponse(json.dumps(response),content_type="application/json")
 
 
-def handle_proceed(volume_level, voice_track_id, background_track_ids):
+def handle_proceed(voice_track_id, background_track_ids):
     result_track_list = []
     voice_track = VoiceTrack.objects.get(pk=voice_track_id)
     voice = AudioSegment.from_mp3(voice_track.track_file.path)
-    louder_song = voice + int(volume_level)
     for background_track_id in background_track_ids:
         background_track = BackgroundTrack.objects.get(pk=background_track_id)
+        volume_level = background_track.db_level
         background = AudioSegment.from_mp3(background_track.track_file.path)
-        generated = background.overlay(louder_song)
-        result_filename = voice_track.name + "_" + background_track.name +"_"+ str(volume_level)
+        louder_song = background + int(volume_level)
+        generated = voice.overlay(louder_song)
+        result_filename = voice_track.name + " [" + background_track.name +"]"
         result_filename = text.slugify(result_filename)
         result_file_path = os.path.join(settings.MEDIA_ROOT, RESULT_UPLOAD_DIRECTORY + result_filename + ".mp3")
         generated.export(result_file_path, format='mp3')
 
         result_track = ResultTrack()
-        result_track.db_level = int(volume_level)
         result_track.voice_track = voice_track
         result_track.background_track = background_track
-        result_track.name = result_filename
+        result_track.name = voice_track.name + " [" + background_track.name +"]"
         result_track.track_file = RESULT_UPLOAD_DIRECTORY + result_filename + ".mp3"
         result_track.save()
         result_track_list.append(result_track)

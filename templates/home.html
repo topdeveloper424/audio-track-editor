@@ -32,19 +32,13 @@
                     <p>Select Background Tracks</p>
                     <select class="form-control" id="backgroundSelect" multiple="multiple">
                         {% for background in backgrounds %}
-                        <option value="{{background.id}}">{{background.name}}</option>
+                        <option value="{{background.id}}">{{background.name}} [{{background.db_level}}]</option>
                         {% endfor %}
                     </select>
 
                 </div>
                 <div class="col-md-3">
-                    <p>Please Enter Db value</p>
-                    <input type="number" class="form-control" step="0.1" id="volumeLevel" placeholder="Enter Db value">
-                </div>
-
-            </div>
-            <div class="row mb-2 mt-4">
-                <div class="col-md-12 text-right">
+                    <p>&nbsp;</p>
                     <div class="px-3">
                         <button type="button" class="btn btn-raised btn-primary" id="start_btn">
                         <i class="fa fa-check-square-o"></i> Start
@@ -167,12 +161,6 @@
         });
 
         $("#start_btn").click(function() {
-            let level = $("#volumeLevel").val();
-            if (level == null || level == "") {
-                toastr.error("Error Happened!", "Enter correct volume level!")
-                return false;
-            }
-
             let voiceTrack = $("#voiceSelect").val();
             if (voiceTrack == "") {
                 toastr.error("Error Happened!", "Choose voice track!")
@@ -190,7 +178,6 @@
                 type: "POST",
                 url: "{% url 'workspace:proceed' %}",
                 data: {
-                    level: level,
                     voice_track_id: voiceTrack,
                     background_track_ids: backgroundTracks.toString()
                 },
