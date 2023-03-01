@@ -26,5 +26,6 @@ urlpatterns = [
     path('zip-result', views.zip_result,name='zip_result'),
  
     path('proceed', views.proceed,name='proceed'),
+    path('get-progress', views.get_progress,name='get_progress'),
 ]
 

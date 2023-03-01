@@ -182,6 +182,7 @@
     Dropzone.autoDiscover = false;
 
     $(document).ready(function() {
+        updateProgress();
         $('#backgroundSelect').select2({
             dropdownParent: $('#backgroundSelectContainer'),
         });
@@ -205,25 +206,48 @@
                 return false;
             }
             let frequencyTrack = $("#frequencySelect").val();
-
-            let url = "{% url 'workspace:proceed' %}?voice_track_id=" + voiceTrack + "&background_track_ids=" + backgroundTracks.toString() + "&freqency_track_id=" + frequencyTrack;
+            setTimeout(function() {
+                updateProgress();
+            }, 1000);
             $.ajax({
-                url: url,
-                method: 'GET',
-                xhrFields: {
-                    onprogress: function(e) {
-                        var response = e.currentTarget.response;
-                        var lastPosition = response.lastIndexOf(":");
-                        var lastSubStr = response.slice(lastPosition + 1, lastPosition + response.length);
-                        let percent = parseInt(lastSubStr.trim());
-                        console.log("percent", percent)
-                        $(".progress-bar").css("width", percent + "%").text(percent + "%").attr("aria-valuenow", percent);
+                type: "GET",
+                url: "{% url 'workspace:proceed' %}",
+                data: {
+                    voice_track_id: voiceTrack,
+                    background_track_ids: backgroundTracks.toString(),
+                    frequency_track_id: frequencyTrack
+                },
+                dataType: 'json',
+                success: function(response) {
+                    if (response.status == "failed") {
+                        toastr.error("Currently service is in progress!", "Error");
+                    } else {
+                        toastr.success("Successfully finished!", "Server Status")
                     }
                 }
             });
 
         });
 
+        function updateProgress() {
+            $.ajax({
+                url: "{% url 'workspace:get_progress' %}",
+                success: function(response) {
+                    let percent = response.percent;
+                    let is_running = response.is_running;
+                    $(".progress-bar").css("width", percent + "%").text(percent + "%").attr("aria-valuenow", percent);
+                    if (is_running == true && percent < 100) {
+                        setTimeout(function() {
+                            updateProgress();
+                        }, 1000);
+                    }
+                    let backgroundTracks = $("#backgroundSelect").val();
+                    if (is_running == false && backgroundTracks.length == 0) {
+                        $(".progress-bar").css("width", "0%").text("0%").attr("aria-valuenow", 0);
+                    }
+                }
+            });
+        }
     });
 </script>
 {% endblock %}

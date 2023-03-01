@@ -7,7 +7,7 @@ from django.conf import settings
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from django.utils import text
 from pydub import AudioSegment
-from workspace.models import VoiceTrack, BackgroundTrack, ResultTrack, FrequencyTrack
+from workspace.models import VoiceTrack, BackgroundTrack, ResultTrack, FrequencyTrack, ProgressBar
 import zipfile
 
 VOICE_UPLOAD_DIRECTORY = "voices/"
@@ -315,9 +315,24 @@ def zip_result(request):
         response = HttpResponse(sio.getvalue(), content_type='application/zip')
         response['Content-Disposition'] = 'attachment; filename="'+zip_name+'"'
         return response
-    
+
+def insert_new_progress():
+    progress_bar = ProgressBar()
+    progress_bar.progress_val = 0
+    progress_bar.is_running = False
+    progress_bar.save()
+
 def proceed(request):
     if request.method == 'GET':
+        response={}
+        progress_bar = ProgressBar.objects.first()
+        if progress_bar == None:
+            insert_new_progress()
+            progress_bar = ProgressBar.objects.first()
+        if progress_bar.is_running:
+            response['status'] = 'failed'
+            return HttpResponse(json.dumps(response),content_type="application/json")
+
         voice_track_id = request.GET['voice_track_id']
         background_track_ids_str = request.GET['background_track_ids']
         background_track_ids = background_track_ids_str.split(",")
@@ -327,50 +342,59 @@ def proceed(request):
             if frequency_track_id == "":
                 frequency_track_id = None
 
-        response = StreamingHttpResponse(handle_proceed(voice_track_id, background_track_ids, frequency_track_id), content_type="text/event-stream")
-        response["Cache-Control"] = "no-cache"
-        return response
+        handle_proceed(voice_track_id, background_track_ids, frequency_track_id)
+        response['status'] = 'success'
+        return HttpResponse(json.dumps(response),content_type="application/json")
 
 def handle_proceed(voice_track_id, background_track_ids, frequency_track_id):
+    progress_bar = ProgressBar.objects.first()
+    progress_bar.progress_val = 0
+    progress_bar.is_running = True
+    progress_bar.save()
     result_track_list = []
     voice_track = VoiceTrack.objects.get(pk=voice_track_id)
-    voice = AudioSegment.from_mp3(voice_track.track_file.path)
-    frequency_song = None
+    frequency_track = None
     if frequency_track_id:
         frequency_track = FrequencyTrack.objects.get(pk=frequency_track_id)
-        frequency = AudioSegment.from_mp3(frequency_track.track_file.path)
-        frequency_song = frequency + int(frequency_track.db_level)
 
     total_size = len(background_track_ids) * 3
     chunk_size = 1
     progress = 0
 
     for background_track_id in background_track_ids:
+        voice = AudioSegment.from_mp3(voice_track.track_file.path)
+
         background_track = BackgroundTrack.objects.get(pk=background_track_id)
         volume_level = background_track.db_level
         background = AudioSegment.from_mp3(background_track.track_file.path)
-        louder_song = voice + int(volume_level)
+        voice = voice + int(volume_level)
 
         progress += chunk_size
         percent = int(progress / total_size * 100)
-        yield f"data:{percent}\n\n"
+        progress_bar.progress_val = percent
+        progress_bar.save()
 
-        generated = background.overlay(louder_song)
-        if frequency_song:
-            generated = generated.overlay(frequency_song)
+        background = background.overlay(voice)
+        if frequency_track:
+            voice = AudioSegment.from_mp3(frequency_track.track_file.path)
+            voice = voice + int(frequency_track.db_level)
+            background = background.overlay(voice)
+        voice = None
 
         progress += chunk_size
         percent = int(progress / total_size * 100)
-        yield f"data:{percent}\n\n"
+        progress_bar.progress_val = percent
+        progress_bar.save()
 
         result_filename = voice_track.name + " [" + background_track.name +"]"
         result_filename = text.slugify(result_filename)
         result_file_path = os.path.join(settings.MEDIA_ROOT, RESULT_UPLOAD_DIRECTORY + result_filename + ".mp3")
-        generated.export(result_file_path, format='mp3')
+        background.export(result_file_path, format='mp3')
 
         result_track = ResultTrack()
         result_track.voice_track = voice_track
         result_track.background_track = background_track
+        result_track.frequency_track = frequency_track
         result_track.name = voice_track.name + " [" + background_track.name +"]"
         result_track.track_file = RESULT_UPLOAD_DIRECTORY + result_filename + ".mp3"
         result_track.save()
@@ -378,5 +402,23 @@ def handle_proceed(voice_track_id, background_track_ids, frequency_track_id):
 
         progress += chunk_size
         percent = int(progress / total_size * 100)
-        yield f"data:{percent}\n\n"
+        progress_bar.progress_val = percent
+        progress_bar.save()
+
+    progress_bar.progress_val = 100
+    progress_bar.is_running = False
+    progress_bar.save()
+
+def get_progress(request):
+    progress_val = 0
+    is_running = False
+    progress_bar = ProgressBar.objects.first()
+    if progress_bar:
+        progress_val = progress_bar.progress_val
+        is_running = progress_bar.is_running
+
+    response = {}
+    response['percent'] = progress_val
+    response['is_running'] = is_running
+    return HttpResponse(json.dumps(response),content_type="application/json")
 

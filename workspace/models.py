@@ -30,3 +30,6 @@ class ResultTrack(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
+class ProgressBar(models.Model):
+    progress_val = models.IntegerField(default=0)
+    is_running = models.BooleanField(default=False)
