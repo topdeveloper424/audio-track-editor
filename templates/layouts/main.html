@@ -98,6 +98,9 @@
                         {% url 'workspace:background_tracks' as url %}
                         <li class="{% if request.path == url %}active{% endif %} nav-item"><a href="{% url 'workspace:background_tracks' %}"><i class="ft-music"></i><span data-i18n="" class="menu-title">Background Tracks</span></a>
                         </li>
+                        {% url 'workspace:frequency_tracks' as url %}
+                        <li class="{% if request.path == url %}active{% endif %} nav-item"><a href="{% url 'workspace:frequency_tracks' %}"><i class="ft-wifi"></i><span data-i18n="" class="menu-title">Binaural Beats</span></a>
+                        </li>
                         {% url 'workspace:result_tracks' as url %}
                         <li class="{% if request.path == url %}active{% endif %} nav-item"><a href="{% url 'workspace:result_tracks' %}"><i class="ft-shopping-cart"></i><span data-i18n="" class="menu-title">Result Tracks</span></a>
                         </li>

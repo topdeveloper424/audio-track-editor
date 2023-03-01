@@ -8,7 +8,7 @@
             </div>
         </div>
         <div class="row mt-3">
-            <div class="col-md-6" id="voiceSelectContainer">
+            <div class="col-md-5" id="voiceSelectContainer">
                 <p>Filter By Voice Track</p>
                 <select class="form-control" id="voiceSelect">
                     <option value="">ALL</option>
@@ -17,7 +17,7 @@
                     {% endfor %}
                 </select>
             </div>
-            <div class="col-md-6" id="backgroundSelectContainer">
+            <div class="col-md-5" id="backgroundSelectContainer">
                 <p>Filter By Background Tracks</p>
                 <select class="form-control" id="backgroundSelect">
                     <option value="">ALL</option>
@@ -25,6 +25,11 @@
                     <option value="{{background.id}}" {% if request.GET.background_id|to_int  == background.id %} selected {% endif %}>{{background.name}} [{{background.db_level}}]</option>
                     {% endfor %}
                 </select>
+            </div>
+            <div class="col-md-2">
+                <p>&nbsp;</p>
+                <button class="btn btn-primary" id="downloadZipBtn"><i class="ft-download mr-2"></i>Download As Zip</button>
+
             </div>
         </div>
 
@@ -34,14 +39,14 @@
             {% if results.has_other_pages %}
             <div class="btn-group" role="group" aria-label="Item pagination">
                 {% if results.has_previous %}
-                <a href="?page={{ results.previous_page_number }}" class="btn btn-outline-primary">&laquo;</a> {% endif %} {% for page_number in results.paginator.page_range %} {% if results.number == page_number %}
+                <a href="?page={{ results.previous_page_number }}{% if request.GET.voice_id %}&voice_id={{request.GET.voice_id}}{% endif %}{% if request.GET.background_id %}&background_id={{request.GET.background_id}}{% endif %}" class="btn btn-outline-primary">&laquo;</a> {% endif %} {% for page_number in results.paginator.page_range %} {% if results.number == page_number %}
                 <button class="btn btn-outline-primary active">
                             <span>{{ page_number }} <span class="sr-only">(current)</span></span>
                         </button> {% else %}
-                <a href="?page={{ page_number }}" class="btn btn-outline-primary">
+                <a href="?page={{ page_number }}{% if request.GET.voice_id %}&voice_id={{request.GET.voice_id}}{% endif %}{% if request.GET.background_id %}&background_id={{request.GET.background_id}}{% endif %}" class="btn btn-outline-primary">
                             {{ page_number }}
                         </a> {% endif %} {% endfor %} {% if results.has_next %}
-                <a href="?page={{ results.next_page_number }}" class="btn btn-outline-primary">&raquo;</a> {% endif %}
+                <a href="?page={{ results.next_page_number }}{% if request.GET.voice_id %}&voice_id={{request.GET.voice_id}}{% endif %}{% if request.GET.background_id %}&background_id={{request.GET.background_id}}{% endif %}" class="btn btn-outline-primary">&raquo;</a> {% endif %}
             </div>
             {% endif %}
             <table class="table text-center">
@@ -130,6 +135,17 @@
                                 <br>
                             </fieldset>
                         </div>
+                        <div class="col-xl-6">
+                            <fieldset class="form-group">
+                                <label for="trackName">Binaural Beats Track</label>
+                                <input class="form-control" type="text" id="frequencyTrackName" readonly>
+                            </fieldset>
+                        </div>
+                        <div class="col-xl-6">
+                            <fieldset class="form-group" id="frequencyTrack">
+                                <br>
+                            </fieldset>
+                        </div>
                     </div>
                 </div>
                 <div class="modal-footer">
@@ -193,6 +209,7 @@
                     let resultTrack = response["result"];
                     let voiceTrack = response["voice"];
                     let backgroundTrack = response["background"];
+                    let frequencyTrack = response["frequency"];
                     $("#trackId").val(resultTrack.pk);
                     $("#trackName").val(resultTrack.name);
                     $("#voiceTrackName").val(voiceTrack.name);
@@ -205,6 +222,14 @@
                     var backgroundAudio = $('<audio controls preload="none"></audio>');
                     backgroundAudio.append('<source src="' + backgroundTrack.url + '" type="audio/mpeg" />');
                     backgroundAudio.appendTo('#backgroundTrack');
+
+                    if (frequencyTrack.hasOwnProperty("name")) {
+                        $("#frequencyTrackName").val(frequencyTrack.name);
+                        $("#dbLevel").val(frequencyTrack.db_level);
+                        var frequencyAudio = $('<audio controls preload="none"></audio>');
+                        frequencyAudio.append('<source src="' + frequencyTrack.url + '" type="audio/mpeg" />');
+                        frequencyAudio.appendTo('#frequencyTrack');
+                    }
 
                     $("#trackModal").modal('show');
                 }
@@ -241,6 +266,16 @@
 
                 }
             }).catch(swal.noop);
+        });
+
+        $("#downloadZipBtn").on("click", function() {
+            let voice_track_id = $("#voiceSelect").val();
+            if (voice_track_id == "") {
+                toastr.error("Select voice filter!", "Error");
+                return;
+            }
+
+            location.href = "{% url 'workspace:zip_result' %}?voice_id=" + voice_track_id;
         });
 
     });
